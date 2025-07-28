@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Job Preferences - Ranking Results</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .stats-summary {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            border-left: 5px solid #667eea;
+        }
+
+        .stats-summary h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+
+        .stats-summary p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .rankings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .ranking-category {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .ranking-category:hover {
+            transform: translateY(-5px);
+        }
+
+        .category-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .preference-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .preference-item:last-child {
+            border-bottom: none;
+        }
+
+        .preference-label {
+            font-weight: 600;
+            color: #333;
+            flex: 1;
+        }
+
+        .preference-score {
+            font-weight: bold;
+            color: #667eea;
+            margin-left: 15px;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .preference-bar {
+            flex: 1;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin: 0 15px;
+            overflow: hidden;
+        }
+
+        .preference-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.8s ease;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .no-data h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .navigation {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .nav-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 0 15px;
+            padding: 12px 25px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .nav-link:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .rankings-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .nav-link {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Your Job Preferences</h1>
+            <p>Based on your pairwise comparison choices</p>
+        </div>
+
+        <div class="main-content">
+            <div id="loading" class="loading">
+                <h3>Loading your preferences...</h3>
+                <p>Please wait while we analyze your comparison data.</p>
+            </div>
+
+            <div id="content" style="display: none;">
+                <div class="stats-summary">
+                    <h3>Analysis Summary</h3>
+                    <p>Based on <span id="total-comparisons">0</span> comparisons</p>
+                    <button class="refresh-btn" onclick="loadRankings()">🔄 Refresh Rankings</button>
+                </div>
+
+                <div id="rankings-container">
+                    <div class="rankings-grid">
+                        <div class="ranking-category">
+                            <div class="category-title">Company Size</div>
+                            <div id="size-rankings"></div>
+                        </div>
+
+                        <div class="ranking-category">
+                            <div class="category-title">Mission Type</div>
+                            <div id="mission-rankings"></div>
+                        </div>
+
+                        <div class="ranking-category">
+                            <div class="category-title">Sector</div>
+                            <div id="sector-rankings"></div>
+                        </div>
+
+                        <div class="ranking-category">
+                            <div class="category-title">Company Stage</div>
+                            <div id="stage-rankings"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="no-data" class="no-data" style="display: none;">
+                    <h3>No Preference Data Available</h3>
+                    <p>You need to complete at least 2 comparisons before we can show your preferences.</p>
+                    <p>Go back to the comparison page to start building your preference profile!</p>
+                </div>
+            </div>
+
+            <div class="navigation">
+                <a href="/" class="nav-link">🔙 Back to Comparisons</a>
+                <a href="#" class="nav-link" onclick="resetData()">🔄 Reset All Data</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load rankings on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRankings();
+        });
+
+        async function loadRankings() {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('content').style.display = 'none';
+                
+                const response = await fetch('/rankings');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayRankings(data);
+                } else {
+                    throw new Error(data.detail || 'Failed to load rankings');
+                }
+            } catch (error) {
+                console.error('Error loading rankings:', error);
+                alert('Error loading rankings: ' + error.message);
+            }
+        }
+
+        function displayRankings(data) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+            
+            // Update total comparisons
+            document.getElementById('total-comparisons').textContent = data.total_comparisons;
+            
+            if (data.total_comparisons < 2) {
+                document.getElementById('rankings-container').style.display = 'none';
+                document.getElementById('no-data').style.display = 'block';
+                return;
+            }
+            
+            document.getElementById('rankings-container').style.display = 'block';
+            document.getElementById('no-data').style.display = 'none';
+            
+            // Display rankings for each category
+            displayCategoryRankings('size', data.size_preferences);
+            displayCategoryRankings('mission', data.mission_preferences);
+            displayCategoryRankings('sector', data.sector_preferences);
+            displayCategoryRankings('stage', data.stage_preferences);
+        }
+
+        function displayCategoryRankings(category, preferences) {
+            const container = document.getElementById(category + '-rankings');
+            container.innerHTML = '';
+            
+            // Sort preferences by score (descending)
+            const sortedPrefs = Object.entries(preferences)
+                .sort(([,a], [,b]) => b - a);
+            
+            sortedPrefs.forEach(([label, score]) => {
+                const item = document.createElement('div');
+                item.className = 'preference-item';
+                
+                const percentage = (score * 100).toFixed(1);
+                
+                item.innerHTML = `
+                    <div class="preference-label">${label}</div>
+                    <div class="preference-bar">
+                        <div class="preference-fill" style="width: ${percentage}%"></div>
+                    </div>
+                    <div class="preference-score">${percentage}%</div>
+                `;
+                
+                container.appendChild(item);
+            });
+        }
+
+        async function resetData() {
+            if (confirm('Are you sure you want to reset all your comparison data? This cannot be undone.')) {
+                try {
+                    const response = await fetch('/reset', {
+                        method: 'POST'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        alert('All data has been reset successfully!');
+                        loadRankings();
+                    } else {
+                        throw new Error(result.detail || 'Failed to reset data');
+                    }
+                } catch (error) {
+                    console.error('Error resetting data:', error);
+                    alert('Error resetting data: ' + error.message);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
