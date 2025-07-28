@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Preference Ranking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .comparison-container {
+            display: none;
+            margin-bottom: 30px;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 30px;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .job-option {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .job-option:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+        }
+
+        .job-option.selected {
+            border-color: #667eea;
+            background: #e8f0fe;
+        }
+
+        .job-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .job-attributes {
+            display: grid;
+            gap: 10px;
+        }
+
+        .attribute {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .attribute-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .attribute-value {
+            color: #333;
+        }
+
+        .vs-divider {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+        }
+
+        .buttons {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+            min-width: 120px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .stats {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stats h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .navigation {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .nav-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 0 15px;
+            padding: 10px 20px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .vs-divider {
+                order: -1;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Job Preference Ranking</h1>
+            <p>Help us understand your job preferences through pairwise comparisons</p>
+        </div>
+
+        <div class="main-content">
+            <div class="stats">
+                <h3>Progress</h3>
+                <p>Comparisons completed: <span id="comparison-count">0</span></p>
+            </div>
+
+            <div id="loading" class="loading">
+                <h3>Loading next comparison...</h3>
+                <p>Please wait while we generate job options for you to compare.</p>
+            </div>
+
+            <div id="comparison-container" class="comparison-container">
+                <div class="comparison-grid">
+                    <div id="option-a" class="job-option" onclick="selectOption('A')">
+                        <div class="job-title">Option A</div>
+                        <div class="job-attributes">
+                            <div class="attribute">
+                                <span class="attribute-label">Size:</span>
+                                <span class="attribute-value" id="size-a"></span>
+                            </div>
+                            <div class="attribute">
+                                <span class="attribute-label">Mission:</span>
+                                <span class="attribute-value" id="mission-a"></span>
+                            </div>
+                            <div class="attribute">
+                                <span class="attribute-label">Sector:</span>
+                                <span class="attribute-value" id="sector-a"></span>
+                            </div>
+                            <div class="attribute">
+                                <span class="attribute-label">Stage:</span>
+                                <span class="attribute-value" id="stage-a"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vs-divider">VS</div>
+
+                    <div id="option-b" class="job-option" onclick="selectOption('B')">
+                        <div class="job-title">Option B</div>
+                        <div class="job-attributes">
+                            <div class="attribute">
+                                <span class="attribute-label">Size:</span>
+                                <span class="attribute-value" id="size-b"></span>
+                            </div>
+                            <div class="attribute">
+                                <span class="attribute-label">Mission:</span>
+                                <span class="attribute-value" id="mission-b"></span>
+                            </div>
+                            <div class="attribute">
+                                <span class="attribute-label">Sector:</span>
+                                <span class="attribute-value" id="sector-b"></span>
+                            </div>
+                            <div class="attribute">
+                                <span class="attribute-label">Stage:</span>
+                                <span class="attribute-value" id="stage-b"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button id="submit-btn" class="btn" onclick="submitChoice()" disabled>
+                        Submit Choice
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadNextComparison()">
+                        Skip This Comparison
+                    </button>
+                </div>
+            </div>
+
+            <div class="navigation">
+                <a href="/rankings-page" class="nav-link">📊 View My Preferences</a>
+                <a href="#" class="nav-link" onclick="resetData()">🔄 Reset All Data</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentComparison = null;
+        let selectedChoice = null;
+        let comparisonCount = 0;
+
+        // Load initial comparison on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNextComparison();
+        });
+
+        async function loadNextComparison() {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('comparison-container').style.display = 'none';
+                
+                const response = await fetch('/next');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentComparison = data;
+                    displayComparison(data);
+                } else {
+                    throw new Error(data.detail || 'Failed to load comparison');
+                }
+            } catch (error) {
+                console.error('Error loading comparison:', error);
+                alert('Error loading comparison: ' + error.message);
+            }
+        }
+
+        function displayComparison(comparison) {
+            // Update Option A
+            document.getElementById('size-a').textContent = comparison.option_a.size;
+            document.getElementById('mission-a').textContent = comparison.option_a.mission;
+            document.getElementById('sector-a').textContent = comparison.option_a.sector;
+            document.getElementById('stage-a').textContent = comparison.option_a.stage;
+
+            // Update Option B
+            document.getElementById('size-b').textContent = comparison.option_b.size;
+            document.getElementById('mission-b').textContent = comparison.option_b.mission;
+            document.getElementById('sector-b').textContent = comparison.option_b.sector;
+            document.getElementById('stage-b').textContent = comparison.option_b.stage;
+
+            // Reset selection
+            selectedChoice = null;
+            document.getElementById('option-a').classList.remove('selected');
+            document.getElementById('option-b').classList.remove('selected');
+            document.getElementById('submit-btn').disabled = true;
+
+            // Show comparison
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('comparison-container').style.display = 'block';
+        }
+
+        function selectOption(choice) {
+            selectedChoice = choice;
+            
+            // Update visual selection
+            document.getElementById('option-a').classList.toggle('selected', choice === 'A');
+            document.getElementById('option-b').classList.toggle('selected', choice === 'B');
+            
+            // Enable submit button
+            document.getElementById('submit-btn').disabled = false;
+        }
+
+        async function submitChoice() {
+            if (!selectedChoice || !currentComparison) {
+                alert('Please select an option first');
+                return;
+            }
+
+            try {
+                const response = await fetch('/compare', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        option_a: currentComparison.option_a,
+                        option_b: currentComparison.option_b,
+                        choice: selectedChoice,
+                        user_id: 'default'
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    comparisonCount = result.total_comparisons;
+                    document.getElementById('comparison-count').textContent = comparisonCount;
+                    
+                    // Load next comparison
+                    setTimeout(() => {
+                        loadNextComparison();
+                    }, 500);
+                } else {
+                    throw new Error(result.detail || 'Failed to submit comparison');
+                }
+            } catch (error) {
+                console.error('Error submitting comparison:', error);
+                alert('Error submitting comparison: ' + error.message);
+            }
+        }
+
+        async function resetData() {
+            if (confirm('Are you sure you want to reset all your comparison data? This cannot be undone.')) {
+                try {
+                    const response = await fetch('/reset', {
+                        method: 'POST'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        comparisonCount = 0;
+                        document.getElementById('comparison-count').textContent = comparisonCount;
+                        alert('All data has been reset successfully!');
+                        loadNextComparison();
+                    } else {
+                        throw new Error(result.detail || 'Failed to reset data');
+                    }
+                } catch (error) {
+                    console.error('Error resetting data:', error);
+                    alert('Error resetting data: ' + error.message);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
